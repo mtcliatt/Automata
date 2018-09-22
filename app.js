@@ -2,12 +2,12 @@
 
 const CELL_COLOR_ALIVE = 'green';
 const CELL_COLOR_DEAD = 'black';
-const NUM_RECTANGLES_WIDE = 1000;
-const NUM_RECTANGLES_HIGH = 1000;
-const CANVAS_WIDTH = 2000;
-const CANVAS_HEIGHT = 2000;
-const RECTANGLE_WIDTH = CANVAS_WIDTH / NUM_RECTANGLES_WIDE;
-const RECTANGLE_HEIGHT = CANVAS_HEIGHT / NUM_RECTANGLES_HIGH;
+const NUM_CELLS_WIDE = 500;
+const NUM_CELLS_HIGH = 500;
+const CANVAS_WIDTH = 1000;
+const CANVAS_HEIGHT = 1000;
+const CELL_WIDTH = CANVAS_WIDTH / NUM_CELLS_WIDE;
+const CELL_HEIGHT = CANVAS_HEIGHT / NUM_CELLS_HIGH;
 
 document.addEventListener("DOMContentLoaded", () => {
   (() => {
@@ -16,34 +16,42 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
 
-    // 2D array of all of the cells in this simulation.
     const world = [];
-
-    // Set each cell state to dead (false).
-    for (let i = 0; i < NUM_RECTANGLES_WIDE; i++) {
+    for (let i = 0; i < NUM_CELLS_WIDE; i++) {
       world.push([]);
-      for (let j = 0; j < NUM_RECTANGLES_HIGH; j++) {
+      for (let j = 0; j < NUM_CELLS_HIGH; j++) {
         world[i].push(false);
       }
     }
 
+    // Sets the state of the cell at the specified location.
+    const setCellState = (column, row, state) => {
+      world[column][row] = state;
+    }
+
+    // Gets the appropriate color for the cell based on that cell's state.
+    const getCellColor = (column, row) => {
+      return world[column][row] ? CELL_COLOR_ALIVE : CELL_COLOR_DEAD;
+    }
+
     // Start off with one alive cell, front and center.
-    setCellState(Math.floor(NUM_RECTANGLES_WIDE / 2), NUM_RECTANGLES_HIGH - 1, true);
+    setCellState(Math.floor(NUM_CELLS_WIDE / 2), NUM_CELLS_HIGH - 1, true);
 
     // Calculate the state each of cell, one row/iteration at a time.
-    for (let r = 1; r < NUM_RECTANGLES_HIGH; r++) {
-      for (let c = 0; c < NUM_RECTANGLES_WIDE; c++) {
-        const row = (NUM_RECTANGLES_HIGH - 1) - r;
+    for (let r = 1; r < NUM_CELLS_HIGH; r++) {
+      for (let c = 0; c < NUM_CELLS_WIDE; c++) {
+        const row = (NUM_CELLS_HIGH - 1) - r;
         setCellState(c, row, calculateCellState(c, row + 1));
       }
     }
 
     paintAllCells();
 
+    // Returns the next state of the cell, according to rule 30.
     function calculateCellState(x, y) {
      const left = x - 1 < 0 ? false : world[x - 1][y];
      const middle = world[x][y];
-     const right = x + 1 > NUM_RECTANGLES_WIDE - 1 ? false : world[x + 1][y]
+     const right = x + 1 > NUM_CELLS_WIDE - 1 ? false : world[x + 1][y]
 
      let count = 0;
      if (left) {
@@ -59,23 +67,18 @@ document.addEventListener("DOMContentLoaded", () => {
       return (middle && right && !left) || count == 1;
     }
 
-    // Returns coord's of the bottom left corner of the rectangle at (column, row)
+    // Converts the column, row coordinates to pixel coordinates on the canvas.
     function cellCoordinateToCanvasCoordinate(column, row) {
       return {
-        x: column * RECTANGLE_WIDTH,
-        y: CANVAS_HEIGHT - row * RECTANGLE_HEIGHT,
+        x: column * CELL_WIDTH,
+        y: CANVAS_HEIGHT - row * CELL_HEIGHT,
       };
     }
 
-    // Sets the state of the cell at the specified location.
-    function setCellState(column, row, newState) {
-      world[column][row] = newState;
-    }
-
-    // Wrapper to call paintCell on every cell.
+    // Wrapper to call paintCell on each cell.
     function paintAllCells() {
-      for (let i = 0; i < NUM_RECTANGLES_WIDE; i++) {
-        for (let j = 0; j < NUM_RECTANGLES_HIGH; j++) {
+      for (let i = 0; i < NUM_CELLS_WIDE; i++) {
+        for (let j = 0; j < NUM_CELLS_HIGH; j++) {
           paintCell(i, j);
         }
       }
@@ -84,11 +87,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Paints the cell at the specified location with the color for its state.
     function paintCell(column, row) {
       const {x, y} = cellCoordinateToCanvasCoordinate(column, row);
-      let color = world[column][row] ? CELL_COLOR_ALIVE : CELL_COLOR_DEAD;
+      const color = getCellColor(column, row);
 
-      ctx.clearRect(x, y, RECTANGLE_WIDTH, RECTANGLE_HEIGHT);
+      ctx.clearRect(x, y, CELL_WIDTH, CELL_HEIGHT);
       ctx.fillStyle = color;
-      ctx.fillRect(x, y, RECTANGLE_WIDTH, RECTANGLE_HEIGHT);
+      ctx.fillRect(x, y, CELL_WIDTH, CELL_HEIGHT);
     }
   })();
 
