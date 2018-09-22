@@ -1,11 +1,13 @@
 'use strict';
 
+const RULE = 30;
+
+const CANVAS_WIDTH = 1000;
+const CANVAS_HEIGHT = 1000;
 const CELL_COLOR_ALIVE = 'green';
 const CELL_COLOR_DEAD = 'black';
 const NUM_CELLS_WIDE = 500;
 const NUM_CELLS_HIGH = 500;
-const CANVAS_WIDTH = 1000;
-const CANVAS_HEIGHT = 1000;
 const CELL_WIDTH = CANVAS_WIDTH / NUM_CELLS_WIDE;
 const CELL_HEIGHT = CANVAS_HEIGHT / NUM_CELLS_HIGH;
 
@@ -57,31 +59,17 @@ const CELL_HEIGHT = CANVAS_HEIGHT / NUM_CELLS_HIGH;
     return world[column][row] ? CELL_COLOR_ALIVE : CELL_COLOR_DEAD;
   }
 
-  const getNeighborStates = (column, row) => {
-    const left = column - 1 < 0 ? false : world[column - 1][row];
-    const middle = world[column][row];
-    const right = column + 1 > NUM_CELLS_WIDE - 1 ? false : world[column + 1][row];
+  const getNeighborStatesSum = (column, row) => {
+    const left = column - 1 < 0 ? 0 : world[column - 1][row] ? 4 : 0;
+    const middle = world[column][row] ? 2 : 0;
+    const right = column + 1 > NUM_CELLS_WIDE - 1 ? 0 : world[column + 1][row] ? 1 : 0;
 
-    return {left, middle, right};
+    return left + middle + right
   }
 
-  // Returns the next state of the cell, according to rule 30.
+  // Returns the next state of the cell.
   const calculateCellState = (column, row) => {
-    const neighborStates = getNeighborStates(column, row);
-
-    let count = 0;
-    if (neighborStates.left) {
-      count++;
-    }
-    if (neighborStates.middle) {
-      count++;
-    }
-    if (neighborStates.right) {
-      count++;
-    }
-
-    return (neighborStates.middle && neighborStates.right && !neighborStates.left)
-        || count == 1;
+    return ((RULE & 1 << getNeighborStatesSum(column, row)) != 0);
   }
 
   // Start off with one alive cell, front and center.
