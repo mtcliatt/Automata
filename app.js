@@ -1,13 +1,14 @@
 'use strict';
 
 const RULE = 30;
+const RULES = [30, 110];
 
-const CANVAS_WIDTH = 1000;
-const CANVAS_HEIGHT = 1000;
+const CANVAS_WIDTH = 2000;
+const CANVAS_HEIGHT = 2000;
 const CELL_COLOR_ALIVE = 'green';
 const CELL_COLOR_DEAD = 'black';
-const NUM_CELLS_WIDE = 500;
-const NUM_CELLS_HIGH = 500;
+const NUM_CELLS_WIDE = 2000;
+const NUM_CELLS_HIGH = 2000;
 const CELL_WIDTH = CANVAS_WIDTH / NUM_CELLS_WIDE;
 const CELL_HEIGHT = CANVAS_HEIGHT / NUM_CELLS_HIGH;
 
@@ -69,7 +70,7 @@ const CELL_HEIGHT = CANVAS_HEIGHT / NUM_CELLS_HIGH;
 
   // Returns the next state of the cell.
   const calculateCellState = (column, row) => {
-    return ((RULE & 1 << getNeighborStatesSum(column, row)) != 0);
+    return ((RULES[row % RULES.length] & 1 << getNeighborStatesSum(column, row)) != 0);
   }
 
   // Start off with one alive cell, front and center.
