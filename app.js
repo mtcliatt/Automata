@@ -1,14 +1,18 @@
 'use strict';
 
 const RULE = 30;
-const RULES = [210, 225];
+const RULES = [30];
+const WRAP_ENABLED = true;
+const NUM_ITERATIONS_TO_ANIMATE = 100000;
 
-const CANVAS_WIDTH = 1000;
-const CANVAS_HEIGHT = 1000;
+// TODO(matt): NEED to use a 1d array to save memory.
+
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 800;
 const CELL_COLOR_ALIVE = 'green';
 const CELL_COLOR_DEAD = 'black';
-const NUM_CELLS_WIDE = 500;
-const NUM_CELLS_HIGH = 500;
+const NUM_CELLS_WIDE = 400;
+const NUM_CELLS_HIGH = 400;
 const CELL_WIDTH = CANVAS_WIDTH / NUM_CELLS_WIDE;
 const CELL_HEIGHT = CANVAS_HEIGHT / NUM_CELLS_HIGH;
 
@@ -50,6 +54,13 @@ const CELL_HEIGHT = CANVAS_HEIGHT / NUM_CELLS_HIGH;
     }
   }
 
+  // Wrapper to call paintCell on each cell.
+  const paintCellRow = (row) => {
+    for (let i = 0; i < NUM_CELLS_WIDE; i++) {
+      paintCell(i, row);
+    }
+  }
+
   // Sets the state of the cell at the specified location.
   const setCellState = (column, row, state) => {
     world[column][row] = state;
@@ -61,11 +72,33 @@ const CELL_HEIGHT = CANVAS_HEIGHT / NUM_CELLS_HIGH;
   }
 
   const getNeighborStatesSum = (column, row) => {
-    const left = column - 1 < 0 ? 0 : world[column - 1][row] ? 4 : 0;
-    const middle = world[column][row] ? 2 : 0;
-    const right = column + 1 > NUM_CELLS_WIDE - 1 ? 0 : world[column + 1][row] ? 1 : 0;
+    let left, middle, right;
 
-    return left + middle + right
+    if (WRAP_ENABLED) {
+      if (row >= NUM_CELLS_HIGH) {
+        row = 0;
+      }
+
+      if (column - 1 < 0) {
+        left = world[world.length - 1][row] ? 4 : 0; 
+      } else {
+        left = world[column - 1][row] ? 4 : 0;
+      }
+
+      middle = world[column][row] ? 2 : 0;
+
+      if (column + 1 > NUM_CELLS_WIDE - 1) {
+        right = world[0][row] ? 1 : 0;
+      } else {
+        right = world[column + 1][row] ? 1 : 0;
+      }
+    } else {
+      left = column - 1 < 0 ? 0 : world[column - 1][row] ? 4 : 0;
+      middle = world[column][row] ? 2 : 0;
+      right = column + 1 > NUM_CELLS_WIDE - 1 ? 0 : world[column + 1][row] ? 1 : 0;
+    }
+
+    return left + middle + right;
   }
 
   // Returns the next state of the cell.
@@ -73,16 +106,28 @@ const CELL_HEIGHT = CANVAS_HEIGHT / NUM_CELLS_HIGH;
     return ((RULES[row % RULES.length] & 1 << getNeighborStatesSum(column, row)) != 0);
   }
 
+  const iterateOnRow = row => {
+    for (let c = 0; c < NUM_CELLS_WIDE; c++) {
+      const rowIndex = NUM_CELLS_HIGH - 1 - row;
+      setCellState(c, rowIndex, calculateCellState(c, rowIndex + 1));
+    }
+
+    paintCellRow(NUM_CELLS_HIGH - row);
+  }
+
   // Start off with one alive cell, front and center.
   setCellState(Math.floor(NUM_CELLS_WIDE / 2), NUM_CELLS_HIGH - 1, true);
 
-  // Calculate the state each of cell, one row/iteration at a time.
-  for (let r = 1; r < NUM_CELLS_HIGH; r++) {
-    for (let c = 0; c < NUM_CELLS_WIDE; c++) {
-      const row = (NUM_CELLS_HIGH - 1) - r;
-      setCellState(c, row, calculateCellState(c, row + 1));
+  const animate = (step) => {
+    if (step == NUM_ITERATIONS_TO_ANIMATE) {
+      return;
     }
+
+    iterateOnRow(step % NUM_CELLS_HIGH)
+    setTimeout(animate, 10, step + 1);
+    
   }
 
-  paintAllCells();
+  animate(1);
+
 })();
